@@ -1,0 +1,164 @@
+const Community = require("../models/community");
+const Article = require("../models/article");
+const Karma_history = require("../models/karma_history");
+
+exports.postCommunity = async (req, res, next) => {
+  const { name, description } = req.body;
+
+  try {
+    await Community.create({ name, description, UserId: req.user.id });
+    res.json({ message: "Community successfully created." });
+  } catch (err) {
+    res.status(401).json({ error: "Error - cannot create community." });
+  }
+};
+
+exports.getCommunities = async (req, res, next) => {
+  //get all communities
+  try {
+    const communities = await Community.findAll();
+    if (!communities) {
+      throw new Error("Server error - no communities found");
+    }
+    res.json({ communities: communities });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot fetch communities.",
+      message: err.message,
+    });
+  }
+};
+
+exports.deleteCommunity = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+
+    const community = await Community.findByPk(id);
+    if (!community) {
+      throw new Error("No community found.");
+    }
+    if (community.UserId !== req.user.id) {
+      throw new Error("Not authorized.");
+    }
+    community.destroy();
+    res.json({ message: "Community deleted." });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot delete community.",
+      message: err.message,
+    });
+  }
+};
+
+exports.postArticle = async (req, res, next) => {
+  //create an article inside a community
+  try {
+    const { title, text } = req.body;
+    const article = await Article.create({
+      title,
+      text,
+      CommunityId: req.params.id,
+      UserId: req.user.id,
+    });
+    const voteHistory = await Karma_history.create({
+      UserId: req.user.id,
+      ArticleId: article.id,
+    });
+    await article.increment("karma", { by: 1 });
+    await voteHistory.update({ vote: 1 });
+    res.json({ message: "Article created." });
+  } catch (err) {
+    res.status(401).json({ error: "Error - cannot create article." });
+  }
+};
+
+exports.getArticles = async (req, res, next) => {
+  //get all articles for community
+  try {
+    const articles = await Article.findAll({
+      where: { CommunityId: req.params.id },
+    });
+    res.json({ articles: articles });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot fetch articles.",
+    });
+  }
+};
+
+exports.deleteArticle = async (req, res, next) => {
+  //delete an article
+  try {
+    const id = req.params.id;
+    const article = await Article.findByPk(id);
+    if (!article) {
+      throw new Error("No article found");
+    }
+    if (article.UserId !== req.user.id) {
+      throw new Error("Not authorized");
+    }
+    article.destroy();
+    res.json({ message: "Article deleted." });
+  } catch (err) {
+    res
+      .status(401)
+      .json({ error: "Error - cannot delete article.", message: err.message });
+  }
+};
+
+exports.postArticleUpvote = async (req, res, next) => {
+  //upvote an article
+  try {
+    const article = await Article.findByPk(req.params.id);
+    if (!article) {
+      throw new Error("Article not found.");
+    }
+
+    const voteHistory = await Karma_history.findOne({
+      where: { ArticleId: article.id },
+    });
+
+    if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
+      throw new Error("Cannot upvote more than once.");
+    } else if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
+      await article.update({ karma: article.karma + 1 });
+    }
+
+    await article.increment("karma", { by: 1 });
+    await voteHistory.update({ vote: 1 });
+    res.json({ message: "Article upvoted." });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot upvote article.",
+      message: err.message,
+    });
+  }
+};
+
+exports.postArticleDownvote = async (req, res, next) => {
+  //upvote an article
+  try {
+    const article = await Article.findByPk(req.params.id);
+    if (!article) {
+      throw new Error("Article not found.");
+    }
+
+    const voteHistory = await Karma_history.findOne({
+      where: { ArticleId: article.id },
+    });
+    if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
+      throw new Error("Cannot downvote more than once.");
+    } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
+      await article.update({ karma: article.karma - 1 });
+    }
+
+    await article.increment("karma", { by: -1 });
+    await voteHistory.update({ vote: -1 });
+    res.json({ message: "Article downvoted." });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot downvote article.",
+      message: err.message,
+    });
+  }
+};
