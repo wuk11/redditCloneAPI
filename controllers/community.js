@@ -14,7 +14,6 @@ exports.postCommunity = async (req, res, next) => {
 };
 
 exports.getCommunities = async (req, res, next) => {
-  //get all communities
   try {
     const communities = await Community.findAll();
     if (!communities) {
@@ -51,7 +50,6 @@ exports.deleteCommunity = async (req, res, next) => {
 };
 
 exports.postArticle = async (req, res, next) => {
-  //create an article inside a community
   try {
     const { title, text } = req.body;
     const article = await Article.create({
@@ -73,7 +71,6 @@ exports.postArticle = async (req, res, next) => {
 };
 
 exports.getArticles = async (req, res, next) => {
-  //get all articles for community
   try {
     const articles = await Article.findAll({
       where: { CommunityId: req.params.id },
@@ -87,7 +84,6 @@ exports.getArticles = async (req, res, next) => {
 };
 
 exports.deleteArticle = async (req, res, next) => {
-  //delete an article
   try {
     const id = req.params.id;
     const article = await Article.findByPk(id);
@@ -107,7 +103,6 @@ exports.deleteArticle = async (req, res, next) => {
 };
 
 exports.postArticleUpvote = async (req, res, next) => {
-  //upvote an article
   try {
     const article = await Article.findByPk(req.params.id);
     if (!article) {
@@ -136,7 +131,6 @@ exports.postArticleUpvote = async (req, res, next) => {
 };
 
 exports.postArticleDownvote = async (req, res, next) => {
-  //upvote an article
   try {
     const article = await Article.findByPk(req.params.id);
     if (!article) {

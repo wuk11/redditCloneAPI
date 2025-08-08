@@ -1,5 +1,6 @@
 const express = require("express");
 const sequelize = require("./sequelize.js");
+const cors = require("cors");
 
 const authRoutes = require("./routes/auth");
 const communityRoutes = require("./routes/community");
@@ -28,6 +29,8 @@ Comment.hasMany(Comment, { as: "Replies", foreignKey: "replyToCommentId" });
 
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 app.use("/auth", authRoutes);
 
