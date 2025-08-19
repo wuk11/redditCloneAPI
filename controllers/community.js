@@ -83,6 +83,15 @@ exports.getArticles = async (req, res, next) => {
   }
 };
 
+exports.getArticle = async (req, res, next) => {
+  try {
+    const article = await Article.findByPk(req.params.id);
+    res.json({ article: article });
+  } catch (err) {
+    res.status(401).json({ error: "Error - cannot fetch article." });
+  }
+};
+
 exports.deleteArticle = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -110,16 +119,23 @@ exports.postArticleUpvote = async (req, res, next) => {
     }
 
     const voteHistory = await Karma_history.findOne({
-      where: { ArticleId: article.id },
+      where: { ArticleId: article.id, UserId: req.user.id },
     });
+
+    if (voteHistory === null) {
+      voteHistory = await Karma_history.create({
+        UserId: req.user.id,
+        ArticleId: article.id,
+      });
+    }
 
     if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
       throw new Error("Cannot upvote more than once.");
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
-      await article.update({ karma: article.karma + 1 });
+      //await article.update({ karma: article.karma + 1 });
+      await article.increment("karma", { by: 1 });
     }
 
-    await article.increment("karma", { by: 1 });
     await voteHistory.update({ vote: 1 });
     res.json({ message: "Article upvoted." });
   } catch (err) {
@@ -138,15 +154,23 @@ exports.postArticleDownvote = async (req, res, next) => {
     }
 
     const voteHistory = await Karma_history.findOne({
-      where: { ArticleId: article.id },
+      where: { ArticleId: article.id, UserId: req.user.id },
     });
+
+    if (voteHistory === null) {
+      voteHistory = await Karma_history.create({
+        UserId: req.user.id,
+        ArticleId: article.id,
+      });
+    }
+
     if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
       throw new Error("Cannot downvote more than once.");
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
-      await article.update({ karma: article.karma - 1 });
+      //await article.update({ karma: article.karma - 1 });
+      await article.increment("karma", { by: -1 });
     }
 
-    await article.increment("karma", { by: -1 });
     await voteHistory.update({ vote: -1 });
     res.json({ message: "Article downvoted." });
   } catch (err) {

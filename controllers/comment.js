@@ -77,6 +77,9 @@ exports.deleteComment = async (req, res, next) => {
     if (!comment) {
       throw new Error("Cannot find comment.");
     }
+    if (comment.UserId !== req.user.id) {
+      throw new Error("Not authorized.");
+    }
     comment.update({ isDeleted: true });
     res.json({ message: "comment deleted." });
   } catch (err) {
@@ -87,7 +90,6 @@ exports.deleteComment = async (req, res, next) => {
 };
 
 exports.postCommentUpvote = async (req, res, next) => {
-  //upvote an article
   try {
     const comment = await Comment.findByPk(req.params.id);
     if (!comment) {
@@ -95,15 +97,23 @@ exports.postCommentUpvote = async (req, res, next) => {
     }
 
     const voteHistory = await Karma_history.findOne({
-      where: { CommentId: comment.id },
+      where: { CommentId: comment.id, UserId: req.user.id },
     });
+
+    if (voteHistory === null) {
+      voteHistory = await Karma_history.create({
+        UserId: req.user.id,
+        CommentId: comment.id,
+      });
+    }
+
     if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
       throw new Error("Cannot upvote more than once.");
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
-      await comment.update({ karma: comment.karma + 1 });
+      //await comment.update({ karma: comment.karma + 1 });
+      await comment.increment("karma", { by: 1 });
     }
 
-    await comment.increment("karma", { by: 1 });
     await voteHistory.update({ vote: 1 });
     res.json({ message: "Comment upvoted." });
   } catch (err) {
@@ -115,7 +125,6 @@ exports.postCommentUpvote = async (req, res, next) => {
 };
 
 exports.postCommentDownvote = async (req, res, next) => {
-  //upvote an article
   try {
     const comment = await Comment.findByPk(req.params.id);
     if (!comment) {
@@ -123,15 +132,23 @@ exports.postCommentDownvote = async (req, res, next) => {
     }
 
     const voteHistory = await Karma_history.findOne({
-      where: { CommentId: comment.id },
+      where: { CommentId: comment.id, UserId: req.user.id },
     });
+
+    if (voteHistory === null) {
+      voteHistory = await Karma_history.create({
+        UserId: req.user.id,
+        CommentId: comment.id,
+      });
+    }
+
     if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
       throw new Error("Cannot downvote more than once.");
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
-      await comment.update({ karma: comment.karma - 1 });
+      //await comment.update({ karma: comment.karma - 1 });
+      await comment.increment("karma", { by: -1 });
     }
 
-    await comment.increment("karma", { by: -1 });
     await voteHistory.update({ vote: -1 });
     res.json({ message: "Comment downvoted." });
   } catch (err) {

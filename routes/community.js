@@ -15,6 +15,8 @@ router.post("/:id/article", authMiddleware, communityController.postArticle);
 
 router.get("/:id/articles", communityController.getArticles);
 
+router.get("/articles/:id", communityController.getArticle);
+
 router.delete(
   "/article/:id",
   authMiddleware,

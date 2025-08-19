@@ -39,7 +39,7 @@ exports.postLogin = async (req, res, next) => {
       expiresIn: "1h",
     });
 
-    res.json({ token });
+    res.json({ token: token, expiresIn: "3600" });
   } catch (err) {
     res.status(401).json({ error: "Login failed" });
   }
