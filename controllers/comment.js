@@ -96,7 +96,7 @@ exports.postCommentUpvote = async (req, res, next) => {
       throw new Error("Comment not found.");
     }
 
-    const voteHistory = await Karma_history.findOne({
+    let voteHistory = await Karma_history.findOne({
       where: { CommentId: comment.id, UserId: req.user.id },
     });
 
@@ -110,7 +110,8 @@ exports.postCommentUpvote = async (req, res, next) => {
     if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
       throw new Error("Cannot upvote more than once.");
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
-      //await comment.update({ karma: comment.karma + 1 });
+      await comment.increment("karma", { by: 2 });
+    } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 0) {
       await comment.increment("karma", { by: 1 });
     }
 
@@ -131,7 +132,7 @@ exports.postCommentDownvote = async (req, res, next) => {
       throw new Error("Comment not found.");
     }
 
-    const voteHistory = await Karma_history.findOne({
+    let voteHistory = await Karma_history.findOne({
       where: { CommentId: comment.id, UserId: req.user.id },
     });
 
@@ -145,7 +146,8 @@ exports.postCommentDownvote = async (req, res, next) => {
     if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
       throw new Error("Cannot downvote more than once.");
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
-      //await comment.update({ karma: comment.karma - 1 });
+      await comment.increment("karma", { by: -2 });
+    } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 0) {
       await comment.increment("karma", { by: -1 });
     }
 
