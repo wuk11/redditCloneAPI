@@ -17,6 +17,8 @@ router.get("/:id/articles", communityController.getArticles);
 
 router.get("/articles/:id", communityController.getArticle);
 
+router.get("/randomArticles/", communityController.getRandomArticles);
+
 router.delete(
   "/article/:id",
   authMiddleware,

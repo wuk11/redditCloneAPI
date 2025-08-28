@@ -83,6 +83,17 @@ exports.getArticles = async (req, res, next) => {
   }
 };
 
+exports.getRandomArticles = async (req, res, next) => {
+  try {
+    const articles = await Article.findAll();
+    res.json({ articles: articles });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot fetch the random articles.",
+    });
+  }
+};
+
 exports.getArticle = async (req, res, next) => {
   try {
     const article = await Article.findByPk(req.params.id);
