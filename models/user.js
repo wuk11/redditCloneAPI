@@ -23,6 +23,14 @@ const User = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    global_role: {
+      type: DataTypes.STRING,
+      defaultValue: "user",
+    },
   },
   { timestamps: true }
 );

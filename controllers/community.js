@@ -1,12 +1,23 @@
 const Community = require("../models/community");
 const Article = require("../models/article");
 const Karma_history = require("../models/karma_history");
+const communityRoles = require("../models/communityRoles");
 
 exports.postCommunity = async (req, res, next) => {
   const { name, description } = req.body;
 
   try {
-    await Community.create({ name, description, UserId: req.user.id });
+    const community = await Community.create({
+      name,
+      description,
+      UserId: req.user.id,
+    });
+    await communityRoles.create({
+      role: "owner",
+      UserId: req.user.id,
+      CommunityId: community.id,
+    });
+
     res.json({ message: "Community successfully created." });
   } catch (err) {
     res.status(401).json({ error: "Error - cannot create community." });
@@ -51,10 +62,12 @@ exports.deleteCommunity = async (req, res, next) => {
 
 exports.postArticle = async (req, res, next) => {
   try {
-    const { title, text } = req.body;
+    const { title, text, image, tag } = req.body;
     const article = await Article.create({
       title,
       text,
+      image,
+      tag,
       CommunityId: req.params.id,
       UserId: req.user.id,
     });
@@ -66,7 +79,9 @@ exports.postArticle = async (req, res, next) => {
     await voteHistory.update({ vote: 1 });
     res.json({ message: "Article created." });
   } catch (err) {
-    res.status(401).json({ error: "Error - cannot create article." });
+    res
+      .status(401)
+      .json({ error: "Error - cannot create article.", msg: err.message });
   }
 };
 

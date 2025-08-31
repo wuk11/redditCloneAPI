@@ -21,6 +21,16 @@ const Article = sequelize.define(
       unique: false,
       defaultValue: 0,
     },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: false,
+    },
+    tag: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: false,
+    },
   },
   { timestamps: true }
 );

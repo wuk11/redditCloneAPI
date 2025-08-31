@@ -12,6 +12,7 @@ const Article = require("./models/article.js");
 const User = require("./models/user.js");
 const Karma_history = require("./models/karma_history.js");
 const Comment = require("./models/comment.js");
+const communityRoles = require("./models/communityRoles.js");
 
 Community.belongsTo(User); // community created by user
 Community.hasMany(Article); //community has many posts
@@ -26,6 +27,8 @@ Comment.belongsTo(User);
 Comment.belongsTo(Article);
 Comment.belongsTo(Comment, { as: "Parent", foreignKey: "replyToCommentId" });
 Comment.hasMany(Comment, { as: "Replies", foreignKey: "replyToCommentId" });
+communityRoles.belongsTo(User, { foreignKey: "UserId" });
+communityRoles.belongsTo(Community, { foreignKey: "CommunityId" });
 
 const app = express();
 app.use(express.json());
