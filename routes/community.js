@@ -9,6 +9,8 @@ router.post("/", authMiddleware, communityController.postCommunity);
 
 router.get("/", communityController.getCommunities);
 
+router.get("/canDelete/:id", authMiddleware, communityController.canDelete);
+
 router.delete("/:id", authMiddleware, communityController.deleteCommunity);
 
 router.post("/:id/article", authMiddleware, communityController.postArticle);

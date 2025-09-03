@@ -48,7 +48,9 @@ exports.deleteCommunity = async (req, res, next) => {
       throw new Error("No community found.");
     }
     if (community.UserId !== req.user.id) {
-      throw new Error("Not authorized.");
+      if (req.user.global_role !== "admin") {
+        throw new Error("Not authorized.");
+      }
     }
     community.destroy();
     res.json({ message: "Community deleted." });
@@ -206,6 +208,28 @@ exports.postArticleDownvote = async (req, res, next) => {
   } catch (err) {
     res.status(401).json({
       error: "Error - cannot downvote article.",
+      message: err.message,
+    });
+  }
+};
+
+exports.canDelete = async (req, res, next) => {
+  try {
+    const communityId = req.params.id;
+    const community = await Community.findByPk(communityId);
+    const userId = req.user.id;
+    let permission = false;
+
+    if (req.user.global_role === "admin" || community.UserId == userId) {
+      permission = true;
+    } else {
+      permission = false;
+    }
+
+    res.json({ canDelete: permission });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error.",
       message: err.message,
     });
   }

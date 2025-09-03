@@ -15,17 +15,19 @@ const Comment = require("./models/comment.js");
 const communityRoles = require("./models/communityRoles.js");
 
 Community.belongsTo(User); // community created by user
-Community.hasMany(Article); //community has many posts
+Community.hasMany(Article, { onDelete: "CASCADE" }); //community has many posts
 Article.belongsTo(User); //posted by user
-User.hasMany(Karma_history);
+Article.belongsTo(Community);
+Article.hasMany(Comment, { onDelete: "CASCADE" });
 Article.hasMany(Karma_history);
-Comment.hasMany(Karma_history);
+User.hasMany(Karma_history);
 Karma_history.belongsTo(User);
 Karma_history.belongsTo(Article);
 Karma_history.belongsTo(Comment);
 Comment.belongsTo(User);
 Comment.belongsTo(Article);
 Comment.belongsTo(Comment, { as: "Parent", foreignKey: "replyToCommentId" });
+Comment.hasMany(Karma_history);
 Comment.hasMany(Comment, { as: "Replies", foreignKey: "replyToCommentId" });
 communityRoles.belongsTo(User, { foreignKey: "UserId" });
 communityRoles.belongsTo(Community, { foreignKey: "CommunityId" });
