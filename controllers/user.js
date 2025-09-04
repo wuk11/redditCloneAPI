@@ -89,9 +89,22 @@ exports.getUser = async (req, res, next) => {
     if (!user) {
       throw new Error("Cannot find user");
     } else {
-      res.json({ username: user.username });
+      res.json({ user: user });
     }
   } catch (err) {
     res.status(401).json({ error: "Cannot fetch user", message: err.message });
+  }
+};
+
+exports.getMe = async (req, res, next) => {
+  try {
+    if (req.user === undefined) {
+      throw new Error("req.user missing.");
+    }
+    res.json({ user: req.user });
+  } catch (err) {
+    res
+      .status(401)
+      .json({ error: "Cannot fetch logged in user.", message: err.message });
   }
 };

@@ -22,8 +22,6 @@ exports.postSignup = (req, res, next) => {
 exports.postLogin = async (req, res, next) => {
   const { username, password } = req.body;
 
-  //find the user by username then check password with hashed password
-
   try {
     const user = await User.findOne({ where: { username: username } });
     if (!user) {
@@ -41,6 +39,6 @@ exports.postLogin = async (req, res, next) => {
 
     res.json({ token: token, expiresIn: "3600" });
   } catch (err) {
-    res.status(401).json({ error: "Login failed" });
+    res.status(401).json({ error: "Login failed", message: err.message });
   }
 };

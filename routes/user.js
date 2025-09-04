@@ -23,7 +23,9 @@ router.post(
   userController.postChangeDescription
 );
 
-router.get("/:id/karma", userController.getKarma);
+router.get("/me", authMiddleware, userController.getMe);
+
+router.get("/:id/karma", authMiddleware, userController.getKarma);
 
 router.get("/:id", userController.getUser);
 
