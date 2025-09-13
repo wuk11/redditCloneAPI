@@ -18,10 +18,18 @@ router.post(
 );
 
 router.post(
+  "/changeDisplayName",
+  authMiddleware,
+  userController.postChangeDisplayName
+);
+
+router.post(
   "/changeDescription",
   authMiddleware,
   userController.postChangeDescription
 );
+
+router.post("/changeImage", authMiddleware, userController.postChangeImage);
 
 router.get("/me", authMiddleware, userController.getMe);
 

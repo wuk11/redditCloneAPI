@@ -15,6 +15,11 @@ const Community = sequelize.define(
       allowNull: false,
       unique: false,
     },
+    rules: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: false,
+    },
   },
   { timestamps: true }
 );

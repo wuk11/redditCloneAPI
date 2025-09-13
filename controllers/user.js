@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 require("dotenv").config();
 const User = require("../models/user");
 const Article = require("../models/article");
+const Comment = require("../models/comment");
 
 exports.postChangePassword = async (req, res, next) => {
   try {
@@ -46,20 +47,56 @@ exports.postChangeUsername = async (req, res, next) => {
   }
 };
 
+exports.postChangeDisplayName = async (req, res, next) => {
+  try {
+    const newDisplayName = req.body.displayName;
+
+    const isDisplayNameTaken = await User.findOne({
+      where: { displayName: newDisplayName },
+    });
+    if (isDisplayNameTaken) {
+      throw new Error("Display Name already taken");
+    } else {
+      const user = await User.findByPk(req.user.id);
+      await user.update({ displayName: newDisplayName });
+      res.json({ message: "Display name changed." });
+    }
+  } catch (err) {
+    res
+      .status(401)
+      .json({ error: "Username change error", message: err.message });
+  }
+};
+
 exports.postChangeDescription = async (req, res, next) => {
   try {
-    const newDescription = req.body.newDescription;
+    const description = req.body.description;
 
     const user = await User.findByPk(req.user.id);
     if (!user) {
       throw new Error("No user found.");
     }
-    await user.update({ description: newDescription });
+    await user.update({ description: description });
     res.json({ message: "description changed" });
   } catch (err) {
     res
       .status(401)
       .json({ error: "Username change error", message: err.message });
+  }
+};
+
+exports.postChangeImage = async (req, res, next) => {
+  try {
+    const image = req.body.image;
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      throw new Error("No user found.");
+    }
+    await user.update({ image: image });
+    res.json({ message: "image changed" });
+  } catch (err) {
+    res.status(401).json({ error: "image change error", message: err.message });
   }
 };
 
@@ -74,6 +111,10 @@ exports.getKarma = async (req, res, next) => {
       let karma = 0;
       for (let i = 0; i < articles.length; i++) {
         karma += articles[i].karma;
+      }
+      const comments = await Comment.findAll({ where: { UserId: id } });
+      for (let i = 0; i < comments.length; i++) {
+        karma += comments[i].karma;
       }
       res.json({ totalKarma: karma });
     }
@@ -101,7 +142,11 @@ exports.getMe = async (req, res, next) => {
     if (req.user === undefined) {
       throw new Error("req.user missing.");
     }
-    res.json({ user: req.user });
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      throw new Error("Cannot find user");
+    }
+    res.json({ user: user });
   } catch (err) {
     res
       .status(401)

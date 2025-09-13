@@ -20,7 +20,12 @@ exports.postCommunity = async (req, res, next) => {
 
     res.json({ message: "Community successfully created." });
   } catch (err) {
-    res.status(401).json({ error: "Error - cannot create community." });
+    res
+      .status(401)
+      .json({
+        error: "Error - cannot create community.",
+        message: err.message,
+      });
   }
 };
 

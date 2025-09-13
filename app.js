@@ -14,12 +14,13 @@ const Karma_history = require("./models/karma_history.js");
 const Comment = require("./models/comment.js");
 const communityRoles = require("./models/communityRoles.js");
 
-Community.belongsTo(User); // community created by user
-Community.hasMany(Article, { onDelete: "CASCADE" }); //community has many posts
-Article.belongsTo(User); //posted by user
+Community.belongsTo(User);
+Community.hasMany(Article, { onDelete: "CASCADE" });
+Community.hasMany(communityRoles, { onDelete: "CASCADE" });
+Article.belongsTo(User);
 Article.belongsTo(Community);
 Article.hasMany(Comment, { onDelete: "CASCADE" });
-Article.hasMany(Karma_history);
+Article.hasMany(Karma_history, { onDelete: "CASCADE" });
 User.hasMany(Karma_history);
 Karma_history.belongsTo(User);
 Karma_history.belongsTo(Article);

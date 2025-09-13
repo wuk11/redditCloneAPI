@@ -15,6 +15,10 @@ const User = sequelize.define(
       allowNull: false,
       unique: true,
     },
+    displayName: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -32,7 +36,16 @@ const User = sequelize.define(
       defaultValue: "user",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    hooks: {
+      beforeCreate: (user) => {
+        if (!user.displayName) {
+          user.displayName = user.username;
+        }
+      },
+    },
+  }
 );
 
 module.exports = User;
