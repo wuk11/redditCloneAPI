@@ -1,6 +1,8 @@
 const Article = require("../models/article");
 const Comment = require("../models/comment");
 const Karma_history = require("../models/karma_history");
+const Community = require("../models/community");
+const Ban_List = require("../models/ban_list");
 
 exports.getComments = async (req, res, next) => {
   try {
@@ -22,6 +24,18 @@ exports.postComment = async (req, res, next) => {
     if (!article) {
       throw new Error("Cannot find post.");
     }
+
+    const community = await Community.findByPk(article.CommunityId);
+    if (!community) {
+      throw new Error("Community not found.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
+    }
+
     const comment = await Comment.create({
       text,
       UserId: req.user.id,
@@ -49,6 +63,22 @@ exports.postReply = async (req, res, next) => {
     if (!comment) {
       throw new Error("Cannot find comment.");
     }
+
+    const article = await Article.findByPk(comment.ArticleId);
+    if (!article) {
+      throw new Error("Article not found.");
+    }
+    const community = await Community.findByPk(article.CommunityId);
+    if (!community) {
+      throw new Error("Community not found.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
+    }
+
     const replyComment = await Comment.create({
       text,
       UserId: req.user.id,
@@ -96,6 +126,21 @@ exports.postCommentUpvote = async (req, res, next) => {
       throw new Error("Comment not found.");
     }
 
+    const article = await Article.findByPk(comment.ArticleId);
+    if (!article) {
+      throw new Error("Article not found.");
+    }
+    const community = await Community.findByPk(article.CommunityId);
+    if (!community) {
+      throw new Error("Community not found.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
+    }
+
     let voteHistory = await Karma_history.findOne({
       where: { CommentId: comment.id, UserId: req.user.id },
     });
@@ -130,6 +175,21 @@ exports.postCommentDownvote = async (req, res, next) => {
     const comment = await Comment.findByPk(req.params.id);
     if (!comment) {
       throw new Error("Comment not found.");
+    }
+
+    const article = await Article.findByPk(comment.ArticleId);
+    if (!article) {
+      throw new Error("Article not found.");
+    }
+    const community = await Community.findByPk(article.CommunityId);
+    if (!community) {
+      throw new Error("Community not found.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
     }
 
     let voteHistory = await Karma_history.findOne({

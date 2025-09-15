@@ -2,6 +2,7 @@ const Community = require("../models/community");
 const Article = require("../models/article");
 const Karma_history = require("../models/karma_history");
 const communityRoles = require("../models/communityRoles");
+const Ban_List = require("../models/ban_list");
 
 exports.postCommunity = async (req, res, next) => {
   const { name, description } = req.body;
@@ -39,10 +40,11 @@ exports.postChangeRules = async (req, res, next) => {
     const hasRole = await communityRoles.findAll({
       where: { UserId: req.user.id, CommunityId: community.id },
     });
+
     if (
       req.user.id == community.UserId ||
       req.user.global_role == "admin" ||
-      hasRole
+      hasRole.length > 0
     ) {
       community.rules = rules;
       await community.save();
@@ -53,6 +55,41 @@ exports.postChangeRules = async (req, res, next) => {
   } catch (err) {
     res.status(401).json({
       error: "Error - cannot change community rules.",
+      message: err.message,
+    });
+  }
+};
+
+exports.postBan = async (req, res, next) => {
+  try {
+    const communityId = req.params.id;
+    const { bannedUserId } = req.body;
+
+    const community = await Community.findByPk(communityId);
+    if (!community) {
+      throw new Error("No community found.");
+    }
+    const hasRole = await communityRoles.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+
+    if (
+      req.user.global_role === "admin" ||
+      req.user.id == community.UserId ||
+      hasRole.length > 0
+    ) {
+      await Ban_List.create({
+        UserId: bannedUserId,
+        bannedBy: req.user.id,
+        CommunityId: community.id,
+      });
+    } else {
+      throw new Error("Not authorised.");
+    }
+    res.json({ message: "User successfully banned." });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - banning user failed.",
       message: err.message,
     });
   }
@@ -99,6 +136,18 @@ exports.deleteCommunity = async (req, res, next) => {
 exports.postArticle = async (req, res, next) => {
   try {
     const { title, text, image, tag } = req.body;
+
+    const community = await Community.findByPk(req.params.id);
+    if (!community) {
+      throw new Error("Cannot find community.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
+    }
+
     const article = await Article.create({
       title,
       text,
@@ -180,6 +229,17 @@ exports.postArticleUpvote = async (req, res, next) => {
       throw new Error("Article not found.");
     }
 
+    const community = await Community.findByPk(article.CommunityId);
+    if (!community) {
+      throw new Error("Community not found.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
+    }
+
     let voteHistory = await Karma_history.findOne({
       where: { ArticleId: article.id, UserId: req.user.id },
     });
@@ -196,7 +256,6 @@ exports.postArticleUpvote = async (req, res, next) => {
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === -1) {
       await article.increment("karma", { by: 2 });
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 0) {
-      //await article.update({ karma: article.karma + 1 });
       await article.increment("karma", { by: 1 });
     }
 
@@ -215,6 +274,17 @@ exports.postArticleDownvote = async (req, res, next) => {
     const article = await Article.findByPk(req.params.id);
     if (!article) {
       throw new Error("Article not found.");
+    }
+
+    const community = await Community.findByPk(article.CommunityId);
+    if (!community) {
+      throw new Error("Community not found.");
+    }
+    const isbanned = await Ban_List.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (isbanned.length > 0) {
+      throw new Error("You are banned.");
     }
 
     let voteHistory = await Karma_history.findOne({

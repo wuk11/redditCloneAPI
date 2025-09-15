@@ -15,10 +15,12 @@ const Karma_history = require("./models/karma_history.js");
 const Comment = require("./models/comment.js");
 const CommunityRoles = require("./models/communityRoles.js");
 const Reports = require("./models/reports.js");
+const Ban_List = require("./models/ban_list.js");
 
 Community.belongsTo(User);
 Community.hasMany(Article, { onDelete: "CASCADE" });
 Community.hasMany(CommunityRoles, { onDelete: "CASCADE" });
+Community.hasMany(Ban_List, { onDelete: "CASCADE" });
 Article.belongsTo(User);
 Article.belongsTo(Community);
 Article.hasMany(Comment, { onDelete: "CASCADE" });
@@ -38,6 +40,8 @@ CommunityRoles.belongsTo(Community, { foreignKey: "CommunityId" });
 Reports.belongsTo(User, { foreignKey: "UserId" });
 Reports.belongsTo(Article, { foreignKey: "ArticleId" });
 Reports.belongsTo(Comment, { foreignKey: "CommentId" });
+Ban_List.belongsTo(Community, { foreignKey: "CommunityId" });
+Ban_List.belongsTo(User, { foreignKey: "bannedBy" });
 
 const app = express();
 app.use(express.json());

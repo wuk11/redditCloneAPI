@@ -13,6 +13,8 @@ router.post(
   communityController.postChangeRules
 );
 
+router.post("/ban/:id", authMiddleware, communityController.postBan);
+
 router.get("/", communityController.getCommunities);
 
 router.get("/canDelete/:id", authMiddleware, communityController.canDelete);
