@@ -20,12 +20,41 @@ exports.postCommunity = async (req, res, next) => {
 
     res.json({ message: "Community successfully created." });
   } catch (err) {
-    res
-      .status(401)
-      .json({
-        error: "Error - cannot create community.",
-        message: err.message,
-      });
+    res.status(401).json({
+      error: "Error - cannot create community.",
+      message: err.message,
+    });
+  }
+};
+
+exports.postChangeRules = async (req, res, next) => {
+  try {
+    const { rules } = req.body;
+    const id = req.params.id;
+
+    const community = await Community.findByPk(id);
+    if (!community) {
+      throw new Error("No community found.");
+    }
+    const hasRole = await communityRoles.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    if (
+      req.user.id == community.UserId ||
+      req.user.global_role == "admin" ||
+      hasRole
+    ) {
+      community.rules = rules;
+      await community.save();
+      res.json({ message: "Community rules successfully changed." });
+    } else {
+      throw new Error("Not authorised.");
+    }
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - cannot change community rules.",
+      message: err.message,
+    });
   }
 };
 
@@ -232,6 +261,35 @@ exports.canDelete = async (req, res, next) => {
     }
 
     res.json({ canDelete: permission });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error.",
+      message: err.message,
+    });
+  }
+};
+
+exports.canEdit = async (req, res, next) => {
+  try {
+    const communityId = req.params.id;
+    const community = await Community.findByPk(communityId);
+    const userId = req.user.id;
+    const hasRole = await communityRoles.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+    let permission = false;
+
+    if (
+      req.user.global_role === "admin" ||
+      community.UserId == userId ||
+      hasRole.length > 0
+    ) {
+      permission = true;
+    } else {
+      permission = false;
+    }
+
+    res.json({ canEdit: permission });
   } catch (err) {
     res.status(401).json({
       error: "Error.",

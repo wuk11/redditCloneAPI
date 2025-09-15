@@ -7,9 +7,17 @@ const router = express.Router();
 
 router.post("/", authMiddleware, communityController.postCommunity);
 
+router.post(
+  "/changeRules/:id",
+  authMiddleware,
+  communityController.postChangeRules
+);
+
 router.get("/", communityController.getCommunities);
 
 router.get("/canDelete/:id", authMiddleware, communityController.canDelete);
+
+router.get("/canEdit/:id", authMiddleware, communityController.canEdit);
 
 router.delete("/:id", authMiddleware, communityController.deleteCommunity);
 
