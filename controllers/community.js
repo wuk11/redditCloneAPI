@@ -95,6 +95,45 @@ exports.postBan = async (req, res, next) => {
   }
 };
 
+exports.postUnBan = async (req, res, next) => {
+  try {
+    const communityId = req.params.id;
+    const { bannedUserId } = req.body;
+
+    const community = await Community.findByPk(communityId);
+    if (!community) {
+      throw new Error("No community found.");
+    }
+    const hasRole = await communityRoles.findAll({
+      where: { UserId: req.user.id, CommunityId: community.id },
+    });
+
+    if (
+      req.user.global_role === "admin" ||
+      req.user.id == community.UserId ||
+      hasRole.length > 0
+    ) {
+      const ban = await Ban_List.findOne({
+        where: { UserId: bannedUserId, CommunityId: community.id },
+      });
+      if (!ban) {
+        throw new Error(
+          "No ban data found for this user. // user is not banned?"
+        );
+      }
+      ban.destroy();
+    } else {
+      throw new Error("Not authorised.");
+    }
+    res.json({ message: "User successfully unbanned." });
+  } catch (err) {
+    res.status(401).json({
+      error: "Error - unbanning user failed.",
+      message: err.message,
+    });
+  }
+};
+
 exports.getCommunities = async (req, res, next) => {
   try {
     const communities = await Community.findAll();
@@ -367,3 +406,5 @@ exports.canEdit = async (req, res, next) => {
     });
   }
 };
+
+exports.postEditTags = async (req, res, next) => {};

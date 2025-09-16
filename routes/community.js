@@ -2,6 +2,7 @@ const express = require("express");
 
 const communityController = require("../controllers/community");
 const authMiddleware = require("../middleware/auth.js");
+const auth = require("../middleware/auth.js");
 
 const router = express.Router();
 
@@ -15,6 +16,8 @@ router.post(
 
 router.post("/ban/:id", authMiddleware, communityController.postBan);
 
+router.post("/unBan/:id", authMiddleware, communityController.postUnBan);
+
 router.get("/", communityController.getCommunities);
 
 router.get("/canDelete/:id", authMiddleware, communityController.canDelete);
@@ -24,6 +27,12 @@ router.get("/canEdit/:id", authMiddleware, communityController.canEdit);
 router.delete("/:id", authMiddleware, communityController.deleteCommunity);
 
 router.post("/:id/article", authMiddleware, communityController.postArticle);
+
+router.post(
+  "/articles/editTags/:id",
+  authMiddleware,
+  communityController.postEditTags
+);
 
 router.get("/:id/articles", communityController.getArticles);
 
