@@ -4,10 +4,17 @@ const Karma_history = require("../models/karma_history");
 const communityRoles = require("../models/communityRoles");
 const Ban_List = require("../models/ban_list");
 
+const { validationResult } = require("express-validator");
+
 exports.postCommunity = async (req, res, next) => {
   const { name, description } = req.body;
 
   try {
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      return res.status(400).json({ errors: validationErrors.array() });
+    }
+
     const community = await Community.create({
       name,
       description,
@@ -30,6 +37,11 @@ exports.postCommunity = async (req, res, next) => {
 
 exports.postChangeRules = async (req, res, next) => {
   try {
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      return res.status(400).json({ errors: validationErrors.array() });
+    }
+
     const { rules } = req.body;
     const id = req.params.id;
 
@@ -174,7 +186,12 @@ exports.deleteCommunity = async (req, res, next) => {
 
 exports.postArticle = async (req, res, next) => {
   try {
-    const { title, text, image, tag } = req.body;
+    const { title, text, image, tags } = req.body;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      return res.status(400).json({ errors: validationErrors.array() });
+    }
 
     const community = await Community.findByPk(req.params.id);
     if (!community) {
@@ -191,7 +208,7 @@ exports.postArticle = async (req, res, next) => {
       title,
       text,
       image,
-      tag,
+      tags,
       CommunityId: req.params.id,
       UserId: req.user.id,
     });
@@ -218,6 +235,7 @@ exports.getArticles = async (req, res, next) => {
   } catch (err) {
     res.status(401).json({
       error: "Error - cannot fetch articles.",
+      message: err.message,
     });
   }
 };
@@ -229,6 +247,7 @@ exports.getRandomArticles = async (req, res, next) => {
   } catch (err) {
     res.status(401).json({
       error: "Error - cannot fetch the random articles.",
+      message: err.message,
     });
   }
 };

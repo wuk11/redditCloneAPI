@@ -26,8 +26,8 @@ const Article = sequelize.define(
       allowNull: true,
       unique: false,
     },
-    tag: {
-      type: DataTypes.STRING,
+    tags: {
+      type: DataTypes.JSON,
       allowNull: true,
       unique: false,
     },
