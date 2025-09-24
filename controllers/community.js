@@ -12,7 +12,7 @@ exports.postCommunity = async (req, res, next) => {
   try {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-      return res.status(400).json({ errors: validationErrors.array() });
+      throw new Error(validationErrors.array()[0].msg);
     }
 
     const community = await Community.create({
@@ -35,11 +35,12 @@ exports.postCommunity = async (req, res, next) => {
   }
 };
 
-exports.postChangeRules = async (req, res, next) => {
+exports.changeRules = async (req, res, next) => {
   try {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-      return res.status(400).json({ errors: validationErrors.array() });
+      console.log(validationErrors.array()[0].msg);
+      throw new Error(validationErrors.array()[0].msg);
     }
 
     const { rules } = req.body;
@@ -190,7 +191,7 @@ exports.postArticle = async (req, res, next) => {
 
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
-      return res.status(400).json({ errors: validationErrors.array() });
+      throw new Error(validationErrors.array()[0].msg);
     }
 
     const community = await Community.findByPk(req.params.id);
@@ -426,4 +427,11 @@ exports.canEdit = async (req, res, next) => {
   }
 };
 
-exports.postEditTags = async (req, res, next) => {};
+exports.postEditTags = async (req, res, next) => {
+  const validationErrors = validationResult(req);
+  if (!validationErrors.isEmpty()) {
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+  }
+};

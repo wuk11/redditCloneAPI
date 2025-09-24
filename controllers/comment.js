@@ -4,6 +4,8 @@ const Karma_history = require("../models/karma_history");
 const Community = require("../models/community");
 const Ban_List = require("../models/ban_list");
 
+const { validationResult } = require("express-validator");
+
 exports.getComments = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -20,6 +22,12 @@ exports.postComment = async (req, res, next) => {
   try {
     const id = req.params.id;
     const { text } = req.body;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
     const article = await Article.findByPk(id);
     if (!article) {
       throw new Error("Cannot find post.");
@@ -59,6 +67,12 @@ exports.postReply = async (req, res, next) => {
   try {
     const id = req.params.id;
     const { text } = req.body;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
     const comment = await Comment.findByPk(id);
     if (!comment) {
       throw new Error("Cannot find comment.");

@@ -4,7 +4,7 @@ const communityController = require("../controllers/community");
 const authMiddleware = require("../middleware/auth.js");
 
 const router = express.Router();
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 
 //community routes ~~~
 router.post(
@@ -25,7 +25,7 @@ router.post(
   communityController.postCommunity
 );
 
-router.post(
+router.patch(
   "/changeRules/:id",
   authMiddleware,
   [
@@ -35,7 +35,7 @@ router.post(
       .isLength({ max: 200 })
       .withMessage("Community rules can be at most 200 characters long."),
   ],
-  communityController.postChangeRules
+  communityController.changeRules
 );
 
 router.post("/ban/:id", authMiddleware, communityController.postBan);
@@ -78,7 +78,7 @@ router.post(
       .isURL()
       .withMessage("Image source must be an URL.")
       .isLength({ max: 150 })
-      .withMessage("Image source can be at most 200 characters long."),
+      .withMessage("Image source can be at most 150 characters long."),
     body("tags")
       .optional({ nullable: true })
       .isArray({ max: 3 })
@@ -95,8 +95,22 @@ router.post(
   communityController.postArticle
 );
 
-router.post(
+router.patch(
   "/articles/editTags/:id",
+  [
+    body("tags")
+      .optional({ nullable: true })
+      .isArray({ max: 3 })
+      .withMessage("Tags must be an array with at most 3 items"),
+    body("tags.*")
+      .isString()
+      .withMessage("Each tag must be a string.")
+      .isLength({ min: 1, max: 15 })
+      .withMessage("Tags must be between 1 and 15 characters long.")
+      .trim()
+      .notEmpty()
+      .withMessage("Tag cannot be empty or just spaces."),
+  ],
   authMiddleware,
   communityController.postEditTags
 );

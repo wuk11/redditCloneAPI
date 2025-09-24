@@ -1,9 +1,17 @@
 const Reports = require("../models/reports");
 
+const { validationResult } = require("express-validator");
+
 exports.postReportComment = async (req, res, next) => {
   try {
     const id = req.params.id;
     const reportReason = req.body.reportReason;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
     await Reports.create({
       reason: reportReason,
       UserId: req.user.id,
@@ -22,6 +30,12 @@ exports.postReportArticle = async (req, res, next) => {
   try {
     const id = req.params.id;
     const reportReason = req.body.reportReason;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
     await Reports.create({
       reason: reportReason,
       UserId: req.user.id,

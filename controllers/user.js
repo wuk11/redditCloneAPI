@@ -5,10 +5,17 @@ const User = require("../models/user");
 const Article = require("../models/article");
 const Comment = require("../models/comment");
 
+const { validationResult } = require("express-validator");
+
 exports.postChangePassword = async (req, res, next) => {
   try {
     const oldPass = req.body.oldPass;
     const newPass = req.body.newPass;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
 
     const isHashedPw = await bcrypt.compare(oldPass, req.user.password);
     if (!isHashedPw) {
@@ -29,6 +36,11 @@ exports.postChangePassword = async (req, res, next) => {
 exports.postChangeUsername = async (req, res, next) => {
   try {
     const newUsername = req.body.newUsername;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
 
     const isUsernameTaken = await User.findOne({
       where: { username: newUsername },
@@ -51,6 +63,11 @@ exports.postChangeDisplayName = async (req, res, next) => {
   try {
     const newDisplayName = req.body.displayName;
 
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
     const isDisplayNameTaken = await User.findOne({
       where: { displayName: newDisplayName },
     });
@@ -72,6 +89,11 @@ exports.postChangeDescription = async (req, res, next) => {
   try {
     const description = req.body.description;
 
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
     const user = await User.findByPk(req.user.id);
     if (!user) {
       throw new Error("No user found.");
@@ -88,6 +110,11 @@ exports.postChangeDescription = async (req, res, next) => {
 exports.postChangeImage = async (req, res, next) => {
   try {
     const image = req.body.image;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
 
     const user = await User.findByPk(req.user.id);
     if (!user) {

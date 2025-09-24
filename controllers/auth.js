@@ -4,19 +4,26 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/user");
 
-exports.postSignup = (req, res, next) => {
-  const { username, password, email } = req.body;
+const { validationResult } = require("express-validator");
 
-  // hash the password and then create the user in the database
-  bcrypt
-    .hash(password, 10)
-    .then((hashedPw) => {
-      return User.create({ email, username, password: hashedPw });
-    })
-    .then((result) => {
-      res.json({ message: "User created successfully." });
-    })
-    .catch((err) => console.log(err));
+exports.postSignup = async (req, res, next) => {
+  try {
+    const { username, password, email } = req.body;
+
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      throw new Error(validationErrors.array()[0].msg);
+    }
+
+    // hash the password and then create the user in the database
+    const hashedPw = await bcrypt.hash(password, 10);
+    await User.create({ email, username, password: hashedPw });
+    res.json({ message: "User created successfully." });
+  } catch (err) {
+    res
+      .status(401)
+      .json({ error: "Registration failed", message: err.message });
+  }
 };
 
 exports.postLogin = async (req, res, next) => {
