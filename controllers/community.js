@@ -223,7 +223,7 @@ exports.postArticle = async (req, res, next) => {
   } catch (err) {
     res
       .status(401)
-      .json({ error: "Error - cannot create article.", msg: err.message });
+      .json({ error: "Error - cannot create article.", message: err.message });
   }
 };
 
@@ -269,11 +269,19 @@ exports.deleteArticle = async (req, res, next) => {
     if (!article) {
       throw new Error("No article found");
     }
-    if (article.UserId !== req.user.id) {
-      throw new Error("Not authorized");
+
+    const hasRole = await communityRoles.findAll({
+      where: { UserId: req.user.id, CommunityId: article.CommunityId },
+    });
+    if (
+      req.user.global_role === "admin" ||
+      req.user.id == article.UserId ||
+      hasRole.length > 0
+    ) {
+      article.destroy();
+      res.json({ message: "Article deleted." });
     }
-    article.destroy();
-    res.json({ message: "Article deleted." });
+    throw new Error("Not authorized");
   } catch (err) {
     res
       .status(401)
@@ -362,7 +370,6 @@ exports.postArticleDownvote = async (req, res, next) => {
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 1) {
       await article.increment("karma", { by: -2 });
     } else if (voteHistory.UserId === req.user.id && voteHistory.vote === 0) {
-      //await article.update({ karma: article.karma - 1 });
       await article.increment("karma", { by: -1 });
     }
 
@@ -428,10 +435,37 @@ exports.canEdit = async (req, res, next) => {
 };
 
 exports.postEditTags = async (req, res, next) => {
-  const validationErrors = validationResult(req);
-  if (!validationErrors.isEmpty()) {
+  try {
+    const { tags } = req.body;
+    const articleId = req.params.id;
+
+    const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
       throw new Error(validationErrors.array()[0].msg);
     }
+
+    const article = await Article.findByPk(articleId);
+    if (!article) {
+      throw new Error("Cannot fetch article.");
+    }
+
+    const hasRole = await communityRoles.findAll({
+      where: { UserId: req.user.id, CommunityId: article.CommunityId },
+    });
+    if (
+      req.user.global_role === "admin" ||
+      article.UserId == req.user.id ||
+      hasRole.length > 0
+    ) {
+      await article.update({ tags: tags });
+      res.json({ article: article, message: "Tags successfully changed." });
+    } else {
+      throw new Error("Not authorised.");
+    }
+  } catch (err) {
+    res.status(401).json({
+      error: "Error cannot edit tags.",
+      message: err.message,
+    });
   }
 };
